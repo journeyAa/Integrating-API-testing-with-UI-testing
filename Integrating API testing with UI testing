@@ -1,0 +1,60 @@
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import org.junit.jupiter.api.*;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class LoginTest {
+    private static final String BASE_URI = "https://api.myapi.com";
+
+    private WebDriver driver;
+
+    @BeforeAll
+    public static void setUp() {
+        // Set up Rest-Assured
+        RestAssured.baseURI = BASE_URI;
+
+        // Set up Chrome WebDriver
+        System.setProperty("webdriver.chrome.driver", "path/to/chromedriver.exe");
+    }
+
+    @BeforeEach
+    public void init() {
+        // Initialize Chrome WebDriver
+        driver = new ChromeDriver();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Close Chrome WebDriver
+        driver.quit();
+    }
+
+    @Test
+    public void testLogin() {
+        // Login API test
+        String requestBody = "{ \"username\": \"user123\", \"password\": \"pass123\" }";
+        Response response = RestAssured.given()
+                .contentType("application/json")
+                .body(requestBody)
+                .post("/login");
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals("Welcome user123!", response.getBody().asString());
+
+        // Login UI test
+        driver.get("https://myapp.com/login");
+        WebElement usernameInput = driver.findElement(By.id("username"));
+        WebElement passwordInput = driver.findElement(By.id("password"));
+        WebElement submitButton = driver.findElement(By.id("submit"));
+
+        usernameInput.sendKeys("user123");
+        passwordInput.sendKeys("pass123");
+        submitButton.click();
+
+        WebElement welcomeMessage = driver.findElement(By.id("welcome"));
+        assertTrue(welcomeMessage.isDisplayed());
+        assertEquals("Welcome user123!", welcomeMessage.getText());
+    }
+}
